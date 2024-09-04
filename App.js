@@ -11,11 +11,13 @@ const CUR_SECTION_KEY = '@section';
 export default function App() {
   const [working, setWorking] = useState(true);
   const [text, setText] = useState("");
+  const [modText, setModText] = useState("");
   const [toDos, setToDos] = useState({});
-  const [toDoLoading, setToDoLoading] = useState(false);
+  const [modifyingKey, setModifyingKey] = useState("");
   const travel = () => setWorking(false);
   const work = () => setWorking(true);
   const onCahngeText = (payload) => setText(payload);
+  const onChangeModText = (payload) => setModText(payload);
   const saveToDos = async (toSave) => {
     await AsyncStorage.setItem(TODO_STORAGE_KEY, JSON.stringify(toSave));
   }
@@ -50,6 +52,14 @@ export default function App() {
     newToDos[key]['isComplete'] = !newToDos[key]['isComplete'];
     saveToDos(newToDos);
     loadToDos();
+  }
+  const updateToDo = async () => {
+    const newToDos = {...toDos};
+    newToDos[modifyingKey].text = modText;
+    saveToDos(newToDos);
+    loadToDos();
+    setModifyingKey("");
+    setModText("");
   }
   const deleteToDo = async (key) => {
     Alert.alert("Delete To Do", "Are you sure?",
@@ -91,12 +101,24 @@ export default function App() {
       <ScrollView>
         {Object.keys(toDos).map(key => working === toDos[key].working ? (
           <View style={{ ...styles.toDo, opacity: toDos[key].isComplete ? 0.5 : 1 }} key={key}>
-            <Text style={styles.toDoText}>{toDos[key].text}</Text>
-            <View style={styles.toDoBtns}>
-              <TouchableOpacity onPress={() => completeToDo(key)}><Text>완료</Text></TouchableOpacity>
-              <TouchableOpacity onPress={() => { }}><Text>수정</Text></TouchableOpacity>
-              <TouchableOpacity onPress={() => deleteToDo(key)}><Text style={styles.deleteBtn}><Fontisto name="trash" size={18} color="black" /></Text></TouchableOpacity>
+            {key === modifyingKey ? 
+            <View style={styles.modContainer}>
+              <TextInput
+              value={modText}
+              onChangeText={onChangeModText}
+              onSubmitEditing={updateToDo}
+              style={styles.modifyingInput}
+            />
+            <TouchableOpacity onPress={() => setModifyingKey("")}><Text style={styles.modCancelBtn}>X</Text></TouchableOpacity>
             </View>
+              : <>
+                <Text style={styles.toDoText}>{toDos[key].text}</Text>
+                <View style={styles.toDoBtns}>
+                  <TouchableOpacity onPress={() => completeToDo(key)}><Text>완료</Text></TouchableOpacity>
+                  <TouchableOpacity onPress={() => setModifyingKey(key)}><Text>수정</Text></TouchableOpacity>
+                  <TouchableOpacity onPress={() => deleteToDo(key)}><Text style={styles.deleteBtn}><Fontisto name="trash" size={18} color="black" /></Text></TouchableOpacity>
+                </View>
+              </>}
           </View>
         ) : null)}
       </ScrollView>
@@ -146,5 +168,17 @@ const styles = StyleSheet.create({
   toDoBtns: {
     flexDirection: 'row',
     gap: 20
+  },
+  modContainer: {
+    flexDirection: 'row',
+    gap:20
+  },
+  modifyingInput: {
+    backgroundColor: 'white',
+    width: '90%',
+    borderRadius: 10
+  },
+  modCancelBtn: {
+    fontSize: 18
   }
 });
