@@ -30,7 +30,9 @@ export default function App() {
   }
   const loadToDos = async () => {
     const s = await AsyncStorage.getItem(TODO_STORAGE_KEY);
-    setToDos(JSON.parse(s));
+    if(s) {
+      setToDos(JSON.parse(s));
+    }
   }
   useEffect(() => {
     const isWorking = loadSection();
